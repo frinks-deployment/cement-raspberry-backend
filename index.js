@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import bodyParser from 'body-parser';
 import constants from './constants.js';
+import { execSync } from 'child_process';
 
 const app = express();
 
@@ -11,8 +12,16 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true, parameterLimit: 5
 const httpServer = createServer(app);
 
 app.post('/relay-stop', (req,res)=> {
-  console.log(req.body);
+  const { relay, timeout } = req.body;
   res.send("OK");
+  try {
+    execSync(`usbrelay ${relay}=1`);
+    setTimeout(() => {
+      execSync(`usbrelay ${relay}=0`);
+    }, timeout);
+  } catch (err) {
+    console.log("Relay stop error----", err);
+  }
 })
 
 httpServer.listen(constants.PORT, async err => {
